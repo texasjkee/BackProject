@@ -1,6 +1,11 @@
 import express from 'express';
+import { validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+
+import { registerValidatior } from './validations/auth.js';
+
+import UserModel from './models/User.js';
 
 const app = express();
 
@@ -14,7 +19,8 @@ mongoose
   })
   .catch((err) => console.log('DB error', err));
 
-app.use(express.json());
+app.use(express.json())
+
 
 app.listen(PORT, (err) => {
   if(!err) {
@@ -22,23 +28,20 @@ app.listen(PORT, (err) => {
   } else console.log(err)
 })
 
-app.get('/', (req, res) => {
-  res.send('Hello TexasJkee!!!')
-});
-
-app.post('/auth/login', (req, res) => {
-  console.log(req.body)
-
-  const token = jwt.sign(
-    {
+app.post('/auth/register', registerValidatior, (req, res) => {
+  const errors = validationResult(req);
+  if(!errors.isEmpty()) {
+    return res.status(400).json(errors.array());
+  }
+ 
+  const doc = new UserModel ({
     email: req.body.email,
-    fullName: 'Michael Persikov',
-    },
-    'secret123',
-  )
+    fullName: req.body.fullName,
+    avatarUrl: req.body.avatarUrl,
+    passwordHash: req.body.passwordHash,
+  })
 
   res.json({
     success: true,
-    token
   })
 })
