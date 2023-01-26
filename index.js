@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import { registerValidatior } from './validations/auth.js';
 
 import UserModel from './models/User.js';
+import checkAuth from './utils/checkAuth.js';
 
 const app = express();
 
@@ -27,6 +28,49 @@ app.listen(PORT, (err) => {
   if(!err) {
     return  console.log('Server OK!!!')
   } else console.log(err)
+})
+
+app.post('/auth/login', async (req, res) => {
+  try {
+    const user = await UserModel.findOne({email: req.body.email})    
+
+    if(!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      })
+    }
+
+    const isValidPass = await bcrypt.compare(req.body.password, user._doc.passwordHash);
+  
+    if (!isValidPass) {
+      return res.status(400).json({
+        message: 'Invalid username or password'
+      })
+    }
+
+    const token = jwt.sign(
+      {
+        _id: user._id,
+      },
+      'secret333',
+      {
+        expiresIn: '30d'
+      }
+    )
+    
+    const {passwordHash, ...userData} = user._doc;
+
+    res.json({
+      ...userData,
+      token,
+    });
+      
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({
+      message: "Failed to login"
+    })
+  }
 })
 
 app.post('/auth/register', registerValidatior, async (req, res) => {
@@ -71,5 +115,15 @@ app.post('/auth/register', registerValidatior, async (req, res) => {
     res.status(500).json({
       message: "Failed to register"
     })
+  }
+})
+
+app.get('/auth/me', checkAuth, (req, res) => {
+  try {
+   res.json({
+    success: true
+   })
+  } catch (error) {
+    
   }
 })
