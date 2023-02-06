@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import multer from 'multer';
+import cors from 'cors';
 
 import { registerValidatior } from './validations/auth.js';
 import { postCreateValidation } from './validations/post.js';
@@ -14,7 +15,7 @@ import * as PostController from './controllers/PostController.js'
 const app = express();
 
 const URL = 'mongodb+srv://texas:Mongodb333@cluster0.fjujydy.mongodb.net/BackProject?retryWrites=true&w=majority';
-const PORT = 3000;
+const PORT = 4444;
 
 mongoose
   .connect(URL)
@@ -24,7 +25,7 @@ mongoose
   .catch((err) => console.log('DB error', err));
 
 app.use(express.json())
-
+app.use(cors())
 app.listen(PORT, (err) => {
   if(!err) {
     return  console.log('Server OK!!!')
